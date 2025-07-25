@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "profileUrl" SET DEFAULT '',
+ALTER COLUMN "bio" SET DEFAULT '';

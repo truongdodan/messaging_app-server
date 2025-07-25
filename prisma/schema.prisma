@@ -15,82 +15,84 @@ datasource db {
 }
 
 model User {
-  id String @id @default(cuid())
-  email String @unique
-  password String
-  firstname String
-  lastname String
-  username String @unique
-  profileUrl String?
-  bio String?
-  isActive Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  firstname    String
+  lastname     String
+  username     String   @unique
+  profileUrl   String?  @default("")
+  bio          String?  @default("")
+  isActive     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  refreshToken String?  @default("")
 
-  participants Participant[]
+  participants         Participant[]
   createdConversations Conversation[] @relation("createdConversation")
-  messageSend Message[]
+  messageSend          Message[]
 
   @@index([email, username, firstname, lastname])
 }
 
 model Conversation {
-  id String @id @default(cuid())
-  title String?
-  type ConversationType @default(DIRECT)
-  profile_url String?
-  isActive Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String           @id @default(cuid())
+  title      String?          @default("")
+  type       ConversationType @default(DIRECT)
+  profileUrl String?          @default("")
+  isActive   Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
   participants Participant[]
-  messages Message[]
+  messages     Message[]
 
-  creator User @relation("createdConversation", fields: [creatorId], references: [id]) 
+  creator   User   @relation("createdConversation", fields: [creatorId], references: [id])
   creatorId String
 
   @@index([creatorId])
 }
 
 model Participant {
-  userId String
+  userId         String
   conversationId String
-  role Role @default(BASIC)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role           Role     @default(BASIC)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@id([userId, conversationId])
-
   @@index([userId, conversationId])
 }
 
 model Message {
-  id Int @id @default(autoincrement())
-  type MessageType @default(TEXT)
-  content String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int         @id @default(autoincrement())
+  type      MessageType @default(TEXT)
+  content   String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
-  sender User? @relation(fields: [senderId], references: [id], onDelete: SetNull)
-  senderId String?
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User?        @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  senderId       String?
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId String
 
   @@index([senderId, conversationId, createdAt])
 }
 
-
 enum ConversationType {
   DIRECT
   GROUP
+  GLOBAL
 }
+
 enum MessageType {
   TEXT
   IMAGE
 }
+
 enum Role {
   ADMIN
   BASIC
