@@ -1,4 +1,5 @@
 const allowedOrigin = require('../configs/allowedOrigins');
+const CustomError = require('../errors/CustomError');
 
 const credentials = (req, res, next) => {
     const origin = req.origin;
@@ -7,7 +8,7 @@ const credentials = (req, res, next) => {
         res.header("Access-Control-Allowe-Credentials", true);
     }
 
-    next(CustomError("Credential Error", "Origin not allowed."));
+    next();
 }
 
 module.exports = credentials;
