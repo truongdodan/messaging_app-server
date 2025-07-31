@@ -1,10 +1,26 @@
 const prisma = require("../lib/prisma");
 const asyncHandler = require("express-async-handler");
-const { body, query } = require("express-validator");
+const { body, query, param } = require("express-validator");
 
 module.exports.getOneAndAllMessages = [
-  [],
+  [
+    param("id")
+      .trim()
+      .notEmpty()
+      .withMessage("Conversation id cannot be empty"),
+  ],
   asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      throw new CustomError(
+        "Input Error",
+        "Some inputs are invalid. Please check and try again.",
+        400,
+        errors.array(),
+      );
+    }
+
     const { id } = req.params;
 
     const conversations = await prisma.conversation.findUnique({
@@ -32,9 +48,25 @@ module.exports.getOneAndAllMessages = [
 ];
 
 module.exports.getAny = [
-  [],
+  [
+    query("type")
+      .trim()
+      .notEmpty()
+      .withMessage("'type' parameter cannot be empty"),
+  ],
   asyncHandler(async (req, res) => {
-    const userId = "cmd8dsnsh0000xgdka1vum2ht"; //req.id;
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      throw new CustomError(
+        "Input Error",
+        "Some inputs are invalid. Please check and try again.",
+        400,
+        errors.array(),
+      );
+    }
+
+    const userId = /* "cmd8dsnsh0000xgdka1vum2ht";  */ req.id;
     const { type } = req.query;
 
     // find all conversation in which current user participates in

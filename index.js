@@ -4,6 +4,7 @@ const cors = require("cors");
 const corsOptions = require("./configs/corsOptions");
 const credentials = require("./middlewares/credentials");
 const errorHandler = require("./middlewares/errorHandler");
+const cookieParser = require("cookie-parser");
 
 const PATH = process.env.PORT || 3000;
 require("dotenv").config();
@@ -13,11 +14,18 @@ app.use(credentials);
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Handle error
 app.use(errorHandler);
 
-// Route
+// Route - auth
+app.use("/login", require("./routes/auth"));
+app.use("/register", require("./routes/register"));
+app.use("/logout", require("./routes/logout"));
+app.use("/refresh", require("./routes/refresh"));
+
+// Route - api
 app.use("/users", require("./routes/api/users"));
 app.use("/conversations", require("./routes/api/conversations"));
 app.use("/messages", require("./routes/api/messages"));
@@ -145,6 +153,13 @@ const main = async () => {
   }); */
 
   // console.log(await prisma.user.findMany());
+  /* console.log(
+    await prisma.user.findUnique({
+      where: {
+        email: "truong@gmail.com",
+      },
+    }),
+  ); */
   /* console.log(
     await prisma.conversation.findMany({
       include: {

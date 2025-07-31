@@ -1,6 +1,6 @@
 const prisma = require("../lib/prisma");
 const asyncHandler = require("express-async-handler");
-const { body, query } = require("express-validator");
+const { body, query, param } = require("express-validator");
 
 /* module.exports.getConversationsMessages = [
   [],
@@ -18,8 +18,36 @@ const { body, query } = require("express-validator");
 ]; */
 
 module.exports.createOne = [
-  [],
+  [
+    body("type")
+      .trim()
+      .notEmpty()
+      .withMessage("Message's type cannot be empty"),
+
+    body("content")
+      .trim()
+      .notEmpty()
+      .withMessage("You have to write some message in order to send it."),
+
+    body("conversationId").trim().optional(),
+
+    body("receiverId")
+      .trim()
+      .notEmpty()
+      .withMessage("Receiver's id cannot be empty"),
+  ],
   asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      throw new CustomError(
+        "Input Error",
+        "Some inputs are invalid. Please check and try again.",
+        400,
+        errors.array(),
+      );
+    }
+
     const userId = req.id;
     const { type, content, conversationId, receiverId } = req.body;
 
@@ -57,8 +85,24 @@ module.exports.createOne = [
 ];
 
 module.exports.deleteOne = [
-  [],
+  [
+    param("id")
+      .trim()
+      .notEmpty()
+      .withMessage("Conversation id cannot be empty"),
+  ],
   asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      throw new CustomError(
+        "Input Error",
+        "Some inputs are invalid. Please check and try again.",
+        400,
+        errors.array(),
+      );
+    }
+
     const { id } = req.params;
 
     const result = await prisma.message.delete({
@@ -66,5 +110,7 @@ module.exports.deleteOne = [
         id: id,
       },
     });
+
+    res.status(203).send(result);
   }),
 ];
