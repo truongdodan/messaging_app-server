@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String         @id @default(cuid())
+  email                String         @unique
+  password             String
+  firstname            String
+  lastname             String
+  username             String         @unique
+  profileUrl           String?        @default("")
+  bio                  String?        @default("")
+  isActive             Boolean        @default(false)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  refreshToken         String?        @default("")
+  coverUrl             String?        @default("")
+  createdConversations Conversation[] @relation("createdConversation")
+  messageSend          Message[]
+  participants         Participant[]
+
+  @@index([email, username, firstname, lastname])
+}
+
+model Conversation {
+  id           String           @id @default(cuid())
+  title        String?          @default("")
+  type         ConversationType @default(DIRECT)
+  isActive     Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  creatorId    String
+  profileUrl   String?          @default("")
+  creator      User             @relation("createdConversation", fields: [creatorId], references: [id])
+  messages     Message[]
+  participants Participant[]
+
+  @@index([creatorId])
+}
+
+model Participant {
+  userId         String
+  conversationId String
+  role           Role         @default(BASIC)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, conversationId])
+  @@index([userId, conversationId])
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  type           MessageType  @default(TEXT)
+  content        String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  senderId       String?
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User?        @relation(fields: [senderId], references: [id])
+
+  @@index([senderId, conversationId, createdAt])
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+  GLOBAL
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+}
+
+enum Role {
+  ADMIN
+  BASIC
+}
