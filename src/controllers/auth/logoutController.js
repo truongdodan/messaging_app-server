@@ -1,4 +1,4 @@
-const prisma = require("../../lib/prisma");
+const { prisma, Prisma } = require("../../lib/prisma");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const CustomError = require("../../errors/CustomError");

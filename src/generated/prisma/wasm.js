@@ -192,7 +192,7 @@ exports.Role = exports.$Enums.Role = {
 
 exports.MessageType = exports.$Enums.MessageType = {
   TEXT: 'TEXT',
-  IMAGE: 'IMAGE'
+  FILE: 'FILE'
 };
 
 exports.Prisma.ModelName = {

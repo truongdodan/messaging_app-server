@@ -1,7 +1,6 @@
-const prisma = require("../../lib/prisma");
-const CustomError = require("../errors/CustomError");
+const { prisma, Prisma } = require("../../lib/prisma");
 
-module.exports = async (io, socket) => {
+module.exports = (io, socket) => {
   // Handle user coming online
   const handleUserOnline = async () => {
     try {
@@ -43,7 +42,6 @@ module.exports = async (io, socket) => {
       allUsers.forEach((user) => {
         io.to(`user_${user.id}`).emit("user_offline", {
           userId: socket.userId,
-          username: socket.user.username,
         });
       });
     } catch (error) {

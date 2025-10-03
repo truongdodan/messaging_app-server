@@ -80,7 +80,7 @@ enum ConversationType {
 
 enum MessageType {
   TEXT
-  IMAGE
+  FILE
 }
 
 enum Role {

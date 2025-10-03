@@ -1,12 +1,11 @@
 const jwt = require("jsonwebtoken");
-const prisma = require("../../lib/prisma");
-const asyncHandler = require("express-async-handler");
-const CustomError = require("../errors/CustomError");
+const { prisma, Prisma } = require("../../lib/prisma");
+const CustomError = require("../../errors/CustomError");
 
 module.exports = async (socket, next) => {
   try {
     //get token
-    const token = socket.handshake.auth.token || socket.handshake.query.token;
+    const token = socket.handshake.auth.token;
 
     if (!token) {
       return next(

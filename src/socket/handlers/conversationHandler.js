@@ -1,4 +1,4 @@
-const prisma = require("../../lib/prisma");
+const { prisma, Prisma } = require("../../lib/prisma");
 
 const chatHandler = (io, socket) => {
   // Join all conversations when user connects
@@ -31,7 +31,8 @@ const chatHandler = (io, socket) => {
   // Create new chat
   socket.on("create_conversation", async (data) => {
     try {
-      const { title, type, profileUrl, allMemberIds } = data; // type: 'DIRECT' or 'GROUP'
+      const { title, type, profileUrl, allMemberIds = [] } = data; // type: 'DIRECT' or 'GROUP'
+      allMemberIds.push(socket.userId);
 
       // Create chat
       const newConversation = await prisma.conversation.create({
@@ -46,11 +47,34 @@ const chatHandler = (io, socket) => {
           ...(type && { type }),
           ...(profileUrl && { profileUrl }),
         },
+        select: {
+          id: true,
+          updatedAt: true,
+          type: true,
+          profileUrl,
+          title,
+          participants: {
+            // where: { user: { id: { not: socket.userId } } },
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  firstname: true,
+                  lastname: true,
+                  username: true,
+                  profileUrl: true,
+                  isActive: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       // Make all online members join the socket room
       allMemberIds.forEach((memberId) => {
         io.to(`user_${memberId}`).emit("new_conversation", newConversation);
+        console.log("Notify new_conversation", newConversation);
         // If they're online, make them join the room
         const memberSockets = Array.from(io.sockets.sockets.values()).filter(
           // Get every socket that user have on mul device

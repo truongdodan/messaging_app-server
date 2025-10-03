@@ -1,10 +1,18 @@
-const prisma = require("../../lib/prisma");
+const { prisma, Prisma } = require("../../lib/prisma");
 
 module.exports = async (io, socket) => {
   // Send message in a chat
   socket.on("send_message", async (data) => {
     try {
       const { type, content, conversationId, receiverId } = data;
+
+      const validTypes = ["TEXT", "FILE"];
+
+      // check type
+      if (!validTypes.includes(type)) {
+        socket.emit("error", { message: "Invalid message type" });
+        return;
+      }
 
       // Verify user is member of this chat
       const memberCheck = await prisma.conversation.findFirst({
@@ -26,6 +34,20 @@ module.exports = async (io, socket) => {
           content: content,
           sender: { connect: { id: socket.userId } },
           conversation: { connect: { id: conversationId } },
+        },
+        select: {
+          id: true,
+          type: true,
+          content: true,
+          createdAt: true,
+          sender: {
+            select: {
+              id: true,
+              profileUrl: true,
+              username: true,
+            },
+          },
+          conversationId: true,
         },
       });
 

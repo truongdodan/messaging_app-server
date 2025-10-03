@@ -49,7 +49,7 @@ export type ConversationType = (typeof ConversationType)[keyof typeof Conversati
 
 export const MessageType: {
   TEXT: 'TEXT',
-  IMAGE: 'IMAGE'
+  FILE: 'FILE'
 };
 
 export type MessageType = (typeof MessageType)[keyof typeof MessageType]

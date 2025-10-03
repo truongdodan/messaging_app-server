@@ -5,9 +5,12 @@ const corsOptions = require("./configs/corsOptions");
 const credentials = require("./middlewares/credentials");
 const errorHandler = require("./middlewares/errorHandler");
 const cookieParser = require("cookie-parser");
+const http = require("http");
+const setupSocket = require("./socket");
 
-const PATH = process.env.PORT || 3000;
+const server = http.createServer(app);
 require("dotenv").config();
+const PATH = process.env.PORT || 3000;
 
 // Setup middlewares
 app.use(credentials);
@@ -31,7 +34,9 @@ app.use("/messages", require("./routes/api/messages"));
 // Handle error
 app.use(errorHandler);
 
-app.listen(PATH, () => {
+setupSocket(server);
+
+server.listen(PATH, () => {
   console.log(`Server is running on http://localhost:${PATH}`);
 });
 

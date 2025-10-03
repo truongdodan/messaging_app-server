@@ -1,4 +1,4 @@
-const prisma = require("../lib/prisma");
+const { prisma, Prisma } = require("../lib/prisma");
 const asyncHandler = require("express-async-handler");
 const { body, query, validationResult, param } = require("express-validator");
 const bcrypt = require("bcrypt");
@@ -28,11 +28,12 @@ module.exports.getAny = [
     }
 
     const { search_query, is_friend } = req.query;
-    const currentUserId = req.userId;
+    const currentUserId = req.id;
 
     // Get user by username, first and last name.'isFriend = true' for only users who have conversation with current user
     const users = await prisma.user.findMany({
       where: {
+        id: { not: currentUserId },
         ...(search_query && {
           OR: [
             { username: { contains: search_query, mode: "insensitive" } },
@@ -55,7 +56,6 @@ module.exports.getAny = [
                 },
               },
             },
-            { id: { not: currentUserId } },
           ],
         }),
       },
