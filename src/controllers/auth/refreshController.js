@@ -18,7 +18,6 @@ module.exports = asyncHandler(async (req, res) => {
   // check if user with this refresh token exists
   const foundUser = await prisma.user.findFirst({
     where: {
-      id: req.id,
       refreshToken: refreshToken,
     },
   });

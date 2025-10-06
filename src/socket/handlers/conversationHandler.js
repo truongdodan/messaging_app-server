@@ -29,7 +29,7 @@ const chatHandler = (io, socket) => {
   });
 
   // Create new chat
-  socket.on("create_conversation", async (data) => {
+  socket.on("create_conversation", async (data, callback) => {
     try {
       const { title, type, profileUrl, allMemberIds = [] } = data; // type: 'DIRECT' or 'GROUP'
       allMemberIds.push(socket.userId);
@@ -51,10 +51,10 @@ const chatHandler = (io, socket) => {
           id: true,
           updatedAt: true,
           type: true,
-          profileUrl,
-          title,
+          profileUrl: true,
+          title: true,
           participants: {
-            // where: { user: { id: { not: socket.userId } } },
+            where: { user: { id: { not: socket.userId } } },
             select: {
               user: {
                 select: {
@@ -71,10 +71,15 @@ const chatHandler = (io, socket) => {
         },
       });
 
+      // return new conversation
+      if (callback) {
+        callback(newConversation);
+      }
+
       // Make all online members join the socket room
       allMemberIds.forEach((memberId) => {
         io.to(`user_${memberId}`).emit("new_conversation", newConversation);
-        console.log("Notify new_conversation", newConversation);
+
         // If they're online, make them join the room
         const memberSockets = Array.from(io.sockets.sockets.values()).filter(
           // Get every socket that user have on mul device
