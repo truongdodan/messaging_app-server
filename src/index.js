@@ -23,8 +23,6 @@ app.use(cookieParser());
 app.use("/global", async (req, res) => {
   const globalConversationId = process.env.GLOBAL_CONVERSATION_ID;
 
-  console.log("it worked here: ", process.env.GLOBAL_CONVERSATION_ID);
-
   res.status(200).send({ globalConversationId });
 });
 app.use("/logout", require("./routes/logout"));
@@ -46,27 +44,5 @@ setupSocket(server);
 server.listen(PATH, () => {
   console.log(`Server is running on http://localhost:${PATH}`);
 });
-
-/* const { prisma } = require("./lib/prisma");
-
-const addMemberGobleChat = async () => {
-  try {
-    const globalConver = await prisma.conversation.update({
-      where: {
-        id: process.env.GLOBAL_CONVERSATION_ID,
-      },
-      data: {
-        title: "GLOBAL",
-        profileUrl: "/heyitsacat.jpg",
-      },
-    });
-
-    console.log(globalConver);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-addMemberGobleChat(); */
 
 module.exports = app;
