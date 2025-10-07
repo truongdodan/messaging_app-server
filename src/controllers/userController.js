@@ -66,6 +66,7 @@ module.exports.getAny = [
         lastname: true,
         profileUrl: true,
         bio: true,
+        isActive: true,
       },
     });
 

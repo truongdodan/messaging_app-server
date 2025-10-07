@@ -19,10 +19,6 @@ const chatHandler = (io, socket) => {
       userConversations.forEach((conversation) => {
         socket.join(`conversation_${conversation.id}`);
       });
-
-      console.log(
-        `User ${socket.user.username} joined ${userConversations.length} chat rooms`,
-      );
     } catch (error) {
       console.error("Error joining chats:", error);
     }

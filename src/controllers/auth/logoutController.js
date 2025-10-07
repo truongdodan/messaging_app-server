@@ -20,7 +20,7 @@ module.exports = asyncHandler(async (req, res) => {
   // no user found, delete cookies
   if (!foundUser) {
     res.clearCookie("jwt", { httpOnly: true, secure: true, sameSite: "none" });
-    res.sendStatus(204);
+    return res.sendStatus(204);
   }
 
   // delete refresh token in database
