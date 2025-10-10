@@ -62,7 +62,7 @@ module.exports.handleLogin = [
         username: foundUser.username,
       },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "10m" },
+      { expiresIn: "1h" },
     );
     const refreshToken = jwt.sign(
       {
@@ -70,7 +70,7 @@ module.exports.handleLogin = [
         username: foundUser.username,
       },
       process.env.REFRESH_TOKEN_SECRET,
-      { expiresIn: "3d" },
+      { expiresIn: "14d" },
     );
 
     // update refresh token in db
@@ -84,7 +84,7 @@ module.exports.handleLogin = [
       httpOnly: true,
       secure: true,
       sameSite: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // expire in 7 days
+      maxAge: 14 * 24 * 60 * 60 * 1000, // expire in 14 days
     });
 
     res.status(200).json({

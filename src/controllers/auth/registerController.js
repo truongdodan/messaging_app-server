@@ -113,10 +113,25 @@ module.exports.handleRegister = [
         username: username,
       },
       select: {
+        id: true,
         username: true,
       },
     });
 
-    res.status(201).send(newUser);
+    // add new user to global conversation
+    await prisma.participant.create({
+      data: {
+        conversation: {
+          connect: { id: process.env.GLOBAL_CONVERSATION_ID },
+        },
+        user: {
+          connect: { id: newUser.id },
+        },
+      },
+    });
+
+    console.log("User added to global conversation: ", newUser.username);
+
+    res.status(201).send(newUser.username);
   }),
 ];
