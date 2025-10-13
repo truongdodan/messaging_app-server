@@ -7,6 +7,7 @@ const errorHandler = require("./middlewares/errorHandler");
 const cookieParser = require("cookie-parser");
 const http = require("http");
 const setupSocket = require("./socket");
+const socketEmitter = require("./utils/socketEmitter");
 
 const server = http.createServer(app);
 require("dotenv").config();
@@ -32,14 +33,15 @@ app.use("/login", require("./routes/auth"));
 
 // Route - api
 app.use(require("./middlewares/verifyJWT"));
-app.use("/users", require("./routes/api/users"));
-app.use("/conversations", require("./routes/api/conversations"));
-app.use("/messages", require("./routes/api/messages"));
+app.use("/users", require("./routes/api/userRoute"));
+app.use("/conversations", require("./routes/api/conversationRoute"));
+app.use("/messages", require("./routes/api/messageRoute"));
 
 // Handle error
 app.use(errorHandler);
 
-setupSocket(server);
+const io = setupSocket(server);
+socketEmitter.setIO(io);
 
 server.listen(PATH, () => {
   console.log(`Server is running on http://localhost:${PATH}`);

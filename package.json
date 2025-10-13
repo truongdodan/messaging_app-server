@@ -5,7 +5,10 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "dev:all": "node ./../dev.js"
+    "dev:all": "node ./../dev.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +20,7 @@
     "prettier": "^3.6.2",
     "prettier-eslint": "^16.4.2",
     "prisma": "^6.12.0",
+    "socket.io-client": "^4.8.1",
     "supertest": "^7.1.4"
   },
   "dependencies": {
@@ -29,6 +33,7 @@
     "express": "^5.1.0",
     "express-async-handler": "^1.2.0",
     "express-validator": "^7.2.1",
+    "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "socket.io": "^4.8.1",
