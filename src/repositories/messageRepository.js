@@ -26,7 +26,7 @@ module.exports = {
     });
   },
   async get(data) {
-    return await prisma.conversation.findUnique({
+    /* return await prisma.conversation.findUnique({
       where: {
         id: data.conversationId,
       },
@@ -65,6 +65,29 @@ module.exports = {
             },
           },
         },
+      },
+    }); */
+
+    return await prisma.message.findMany({
+      where: {
+        conversationId: data.conversationId,
+      },
+      select: {
+        id: true,
+        type: true,
+        content: true,
+        createdAt: true,
+        sender: {
+          select: {
+            id: true,
+            profileUrl: true,
+            username: true,
+          },
+        },
+        conversationId: true,
+      },
+      orderBy: {
+        createdAt: "asc",
       },
     });
   },

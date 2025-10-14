@@ -1,5 +1,6 @@
 const { prisma, Prisma } = require("../../lib/prisma");
 const onlineUserService = require("../../services/onlineUserService");
+const socketEvents = require("../../constants/socketEvents");
 
 module.exports = (io, socket) => {
   // Handle user coming online
@@ -18,7 +19,7 @@ module.exports = (io, socket) => {
           data: { isActive: true },
         });
         // Broadcast to all connected clients that this user is online
-        io.emit("user_online", {
+        io.emit(socketEvents.USER_ONLINE, {
           userId: socket.userId,
           username: socket.user.username,
         });
@@ -30,11 +31,11 @@ module.exports = (io, socket) => {
 
       // sendlist of current online user to this socket
       const currentlyOnlineUserIds = onlineUserService.getOnlineUserIds();
-      socket.emit("online_users_list", {
+      socket.emit(socketEvents.ONLINE_USERS_LIST, {
         userIds: currentlyOnlineUserIds,
       });
 
-      // Join personal roon for notifications
+      // Join personal room for notifications
       socket.join(`user_${socket.userId}`);
     } catch (error) {
       console.error("Error handling user online:", error);
@@ -58,7 +59,7 @@ module.exports = (io, socket) => {
         });
 
         // Broadcast to all connected clients that user is offline
-        io.emit("user_offline", {
+        io.emit(socketEvents.USER_OFFLINE, {
           userId: socket.userId,
         });
 

@@ -74,7 +74,7 @@ module.exports = {
     return newMessage;
   },
   async getMessages(conversationId) {
-    return await messageRepository.get(conversationId);
+    return await messageRepository.get({ conversationId });
   },
   async deleteMessage(data) {
     const { deleteFile } = require("./fileService");

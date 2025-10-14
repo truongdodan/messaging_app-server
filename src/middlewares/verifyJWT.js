@@ -16,10 +16,12 @@ module.exports = asyncHandler(async (req, res, next) => {
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      throw new CustomError(
-        "Invalid token",
-        "Access denied. Invalid or expired token.",
-        401,
+      return next(
+        new CustomError(
+          "Invalid token",
+          "Access denied. Invalid or expired token.",
+          401,
+        ),
       );
     }
 

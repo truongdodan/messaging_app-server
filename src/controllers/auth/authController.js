@@ -83,7 +83,7 @@ module.exports.handleLogin = [
     res.cookie("jwt", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: true,
+      sameSite: "none",
       maxAge: 14 * 24 * 60 * 60 * 1000, // expire in 14 days
     });
 

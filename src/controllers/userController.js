@@ -1,9 +1,9 @@
-const { prisma, Prisma } = require("../lib/prisma");
+const { prisma } = require("../lib/prisma");
 const asyncHandler = require("express-async-handler");
 const { body, query, validationResult, param } = require("express-validator");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const CustomError = require("../errors/CustomError");
+const supabase = require("../lib/supabase");
 
 module.exports.getAny = [
   [
@@ -100,7 +100,7 @@ module.exports.getOne = [
         firstname: true,
         lastname: true,
         profileUrl: true,
-        // coverUrl: true, this fucking shit just dont run fuk this.
+        coverUrl: true,
         bio: true,
       },
     });
@@ -205,12 +205,12 @@ module.exports.updateOne = [
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...(firstname && { firstname }),
-        ...(lastname && { lastname }),
-        ...(username && { username }),
-        ...(profileUrl && { profileUrl }),
-        ...(coverUrl && { coverUrl }),
-        ...(bio && { bio }),
+        ...(firstname !== undefined && { firstname }),
+        ...(lastname !== lastname && { lastname }),
+        ...(username !== username && { username }),
+        ...(profileUrl !== profileUrl && { profileUrl }),
+        ...(coverUrl !== coverUrl && { coverUrl }),
+        ...(bio !== bio && { bio }),
       },
       select: {
         id: true,

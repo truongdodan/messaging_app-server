@@ -7,7 +7,6 @@ const validateSendMessage = (data) => {
     type: Joi.string().valid("TEXT", "FILE").required(),
     content: Joi.string().min(1).required(),
     conversationId: Joi.string().required().pattern(cuidPattern),
-    userId: Joi.string().required().pattern(cuidPattern),
   });
 
   const { error, value } = sendMessageSchema.validate(data);
@@ -17,12 +16,12 @@ const validateSendMessage = (data) => {
   return value;
 };
 
-const validataGetMessagesConversationById = (data) => {
-  const getMessagesConvsersationByIdSchema = Joi.object({
+const validateGetMessagesConversationById = (data) => {
+  const getMessagesConversationByIdSchema = Joi.object({
     conversationId: Joi.string().required().pattern(cuidPattern),
   });
 
-  const { error, value } = getMessagesConvsersationByIdSchema.validate(data);
+  const { error, value } = getMessagesConversationByIdSchema.validate(data);
 
   if (error) {
     throw new Error(error.details[0].message);
@@ -45,6 +44,6 @@ const validateDeleteMessage = (data) => {
 
 module.exports = {
   validateSendMessage,
-  validataGetMessagesConversationById,
+  validateGetMessagesConversationById,
   validateDeleteMessage,
 };

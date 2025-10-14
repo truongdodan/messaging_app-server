@@ -29,7 +29,9 @@ module.exports = asyncHandler(async (req, res) => {
   // verify and send back new access token
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
     if (err || decoded.username !== foundUser.username) {
-      throw new CustomError("Unauthorized", "Invalid refresh token", 401);
+      return next(
+        new CustomError("Unauthorized", "Invalid refresh token", 401),
+      );
     }
 
     const accessToken = jwt.sign(
@@ -38,7 +40,7 @@ module.exports = asyncHandler(async (req, res) => {
         username: foundUser.username,
       },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "10m" },
+      { expiresIn: "1h" },
     );
 
     res.status(200).json({

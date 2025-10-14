@@ -7,20 +7,28 @@ const socketEvents = require("../../constants/socketEvents");
 
 module.exports = async (io, socket) => {
   // Send message in a chat
-  socket.on(socketEvents.SEND_MESSAGE, async (data) => {
+  socket.on(socketEvents.SEND_MESSAGE, async (data, callback) => {
     try {
       const { type, content, conversationId } = validateSendMessage(data);
 
       // Save message to database
-      await messageService.createMessage({
+      const newMessage = await messageService.createMessage({
         type,
         content,
         userId: socket.userId,
         conversationId,
       });
+
+      // return new message
+      if (callback) {
+        callback({ success: true, data: newConversation });
+      }
     } catch (error) {
+      if (callback) {
+        callback({ success: false, error: "Failed to create conversation" });
+      }
       console.error("Error sending message:", error);
-      socket.emit("error", { message: "Failed to send message" });
+      socketEmitter.emitError(socketEvents.ERROR, "Failed to send message");
     }
   });
 
@@ -35,7 +43,7 @@ module.exports = async (io, socket) => {
       });
     } catch (error) {
       console.error("Error deleting message:", error);
-      socket.emit("error", { message: "Failed to delete message" });
+      socketEmitter.emitError(socketEvents.ERROR, "Failed to delete message");
     }
   });
 };

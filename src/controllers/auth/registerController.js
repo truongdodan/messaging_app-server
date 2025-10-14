@@ -28,7 +28,6 @@ module.exports.handleRegister = [
         }
       }),
 
-    ,
     body("firstname")
       .trim()
       .notEmpty()
