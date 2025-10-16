@@ -27,11 +27,12 @@ module.exports = asyncHandler(async (req, res) => {
   }
 
   // verify and send back new access token
-  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
-    if (err || decoded.username !== foundUser.username) {
-      return next(
-        new CustomError("Unauthorized", "Invalid refresh token", 401),
-      );
+  // CHANGE: Use try-catch instead of callback, or handle error properly in callback
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    if (decoded.username !== foundUser.username) {
+      throw new CustomError("Unauthorized", "Invalid refresh token", 401);
     }
 
     const accessToken = jwt.sign(
@@ -40,12 +41,22 @@ module.exports = asyncHandler(async (req, res) => {
         username: foundUser.username,
       },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: "1h" }
     );
+
+    // Attach URLs to user
+    if (foundUser.profileUrl) {
+      foundUser.profileUrl = fileService.getPublicUrl(foundUser.profileUrl);
+    }
+    if (foundUser.coverUrl) {
+      foundUser.coverUrl = fileService.getPublicUrl(foundUser.coverUrl);
+    }
 
     res.status(200).json({
       user: foundUser,
       accessToken,
     });
-  });
+  } catch (err) {
+    throw new CustomError("Unauthorized", "Invalid refresh token", 401);
+  }
 });

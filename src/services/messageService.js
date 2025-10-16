@@ -1,7 +1,41 @@
 const socketEvents = require("../constants/socketEvents");
 const { prisma } = require("../lib/prisma");
 const messageRepository = require("../repositories/messageRepository");
+const fileService = require("../services/fileService");
 const socketEmitter = require("../utils/socketEmitter");
+
+// Helper: Attach URLs to messages
+async function attachUrlsToMessages(messages) {
+  return Promise.all(
+    messages.map(async (msg) => {
+      try {
+        // Attach sender profile URL (public)
+        if (msg.sender?.profileUrl) {
+          msg.sender.profileUrl = fileService.getPublicUrl(
+            msg.sender.profileUrl
+          );
+        }
+
+        // Attach file URL (private - signed)
+        if (msg.type === "FILE") {
+          const fileDetails = JSON.parse(msg.content);
+          const { signedUrl } = await fileService.getSignedUrl(
+            fileDetails.path
+          );
+
+          msg.content = JSON.stringify({
+            ...fileDetails,
+            url: signedUrl, // Add signed URL
+          });
+        }
+      } catch (error) {
+        console.error("Error attaching URLs to message:", error);
+      }
+
+      return msg;
+    })
+  );
+}
 
 module.exports = {
   // When user send Normal text
@@ -18,22 +52,24 @@ module.exports = {
       throw new Error("Not a member of this chat");
     }
 
-    // create new msg
+    // Create message in db
     const newMessage = await messageRepository.create(data);
+
+    // Attach URLs
+    const [messageWithURLs] = await attachUrlsToMessages([newMessage]);
 
     // Broadcast to all user in conversation
     socketEmitter.emitToConversation(
       data.conversationId,
       socketEvents.NEW_MESSAGE,
-      newMessage,
+      messageWithURLs
     );
 
-    return newMessage;
+    return messageWithURLs;
   },
   // When user send image or file
   async createFileMessage(data) {
     const { file, userId, conversationId } = data;
-    const { uploadFile } = require("../services/fileService");
     // Verify user is member of this chat
     const memberCheck = await prisma.conversation.findFirst({
       where: {
@@ -47,7 +83,7 @@ module.exports = {
     }
 
     // Upload file to cloud (Supabase)
-    const fileData = await uploadFile(file);
+    const fileData = await fileService.uploadFile(file);
 
     // Prepare data for new message
     const fileDetails = {
@@ -64,17 +100,25 @@ module.exports = {
       conversationId,
     });
 
+    // Attach URLs
+    const [messageWithURLs] = await attachUrlsToMessages([newMessage]);
+
     // Broadcast to all user in conversation
     socketEmitter.emitToConversation(
       conversationId,
       socketEvents.NEW_MESSAGE,
-      newMessage,
+      messageWithURLs
     );
 
-    return newMessage;
+    return messageWithURLs;
   },
-  async getMessages(conversationId) {
-    return await messageRepository.get({ conversationId });
+  async getMessages(data) {
+    const messages = await messageRepository.get({
+      conversationId: data.conversationId,
+    });
+
+    // Attach file url
+    return await attachUrlsToMessages(messages);
   },
   async deleteMessage(data) {
     const { deleteFile } = require("./fileService");
@@ -116,7 +160,7 @@ module.exports = {
     socketEmitter.emitToConversation(
       message.conversationId,
       socketEvents.REMOVED_MESSAGE,
-      { messageId: data.messageId },
+      { messageId: data.messageId }
     );
 
     return deletedMessage;

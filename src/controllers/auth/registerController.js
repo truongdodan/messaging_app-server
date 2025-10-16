@@ -23,7 +23,7 @@ module.exports.handleRegister = [
           throw new CustomError(
             "Invalid input",
             "This email already been register",
-            400,
+            400
           );
         }
       }),
@@ -53,7 +53,7 @@ module.exports.handleRegister = [
           throw new CustomError(
             "Invalid input",
             "User with this username already exists",
-            400,
+            400
           );
         }
       }),
@@ -63,10 +63,10 @@ module.exports.handleRegister = [
       .notEmpty()
       .withMessage("Password cannot be empty")
       .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,}$/,
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,}$/
       )
       .withMessage(
-        "Password must be atleast 8 characters with letters, numbers, and a symbol",
+        "Password must be atleast 8 characters with letters, numbers, and a symbol"
       ),
 
     body("confirmedPassword")
@@ -80,7 +80,7 @@ module.exports.handleRegister = [
           throw new CustomError(
             "Invalid input",
             "The confirmed password and password does not match.",
-            400,
+            400
           );
         }
       }),
@@ -93,7 +93,7 @@ module.exports.handleRegister = [
         "Input Error",
         "Some inputs are invalid. Please check and try again.",
         400,
-        errors.array(),
+        errors.array()
       );
     }
 

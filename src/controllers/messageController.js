@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 const CustomError = require("../errors/CustomError");
 const messageService = require("../services/messageService");
 const {
-  validataGetMessagesConversationById,
+  validateGetMessagesConversationById,
 } = require("../validators/messageValidator");
 
 const createFileMessage = asyncHandler(async (req, res) => {
@@ -28,11 +28,10 @@ const createFileMessage = asyncHandler(async (req, res) => {
 });
 
 const getMessagesByConversationId = asyncHandler(async (req, res) => {
-  const { conversationId } = validataGetMessagesConversationById(req.params);
+  const { conversationId } = validateGetMessagesConversationById(req.params);
 
   const conversationWithMessages = await messageService.getMessages({
     conversationId,
-    userId: req.id,
   });
 
   res.status(200).send(conversationWithMessages);

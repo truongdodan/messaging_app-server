@@ -7,7 +7,7 @@ const conversationService = require("../services/conversationService");
 const getAny = asyncHandler(async (req, res) => {
   const { type } = validateGetConversation(req.query);
 
-  const conversations = await conversationService.getConversation({
+  const conversations = await conversationService.getConversations({
     ...(type && { type }),
     userId: req.id,
   });

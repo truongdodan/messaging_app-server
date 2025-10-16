@@ -16,9 +16,9 @@ const validateGetConversation = (data) => {
 
 const validateCreateConversation = (data) => {
   const createConversationSchema = Joi.object({
-    title: Joi.string().optional(),
+    title: Joi.string().allow("").optional(),
     type: Joi.string().valid("DIRECT", "GROUP").optional(),
-    profileUrl: Joi.string().uri().optional(),
+    profileUrl: Joi.string().allow("").optional(),
     allMemberIds: Joi.array().items(Joi.string()).required().default([]),
   });
 

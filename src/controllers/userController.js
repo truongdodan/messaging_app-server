@@ -3,7 +3,25 @@ const asyncHandler = require("express-async-handler");
 const { body, query, validationResult, param } = require("express-validator");
 const bcrypt = require("bcrypt");
 const CustomError = require("../errors/CustomError");
-const supabase = require("../lib/supabase");
+const fileService = require("../services/fileService");
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
+
+attachUserImageUrls = (users) => {
+  if (users?.length <= 0 || !users) return [];
+
+  return users.map((user) => {
+    if (user?.profileUrl) {
+      user.profileUrl = fileService.getPublicUrl(user.profileUrl);
+    }
+
+    if (user?.coverUrl) {
+      user.coverUrl = fileService.getPublicUrl(user.coverUrl);
+    }
+
+    return user;
+  });
+};
 
 module.exports.getAny = [
   [
@@ -23,7 +41,7 @@ module.exports.getAny = [
         "Input Error",
         "Some inputs are invalid. Please check and try again.",
         400,
-        errors.array(),
+        errors.array()
       );
     }
 
@@ -70,7 +88,9 @@ module.exports.getAny = [
       },
     });
 
-    res.status(200).send(users);
+    const usersWithImageUrl = attachUserImageUrls([...users]);
+
+    res.status(200).send(usersWithImageUrl);
   }),
 ];
 
@@ -84,7 +104,7 @@ module.exports.getOne = [
         "Input Error",
         "Some inputs are invalid. Please check and try again.",
         400,
-        errors.array(),
+        errors.array()
       );
     }
 
@@ -105,49 +125,55 @@ module.exports.getOne = [
       },
     });
 
-    res.status(200).send(user);
+    // Convert URLs to public URLs - ADD THIS
+    const userWithImageUrl = attachUserImageUrls([user])[0];
+
+    res.status(200).send(userWithImageUrl);
   }),
 ];
 
 module.exports.updateOne = [
+  upload.fields([
+    { name: "profileImage", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
+  ]),
   [
-    body("firstname")
-      .trim()
-      .notEmpty()
-      .withMessage("Firstname cannot be empty"),
-
-    body("lastname").trim().notEmpty().withMessage("Lastname cannot be empty"),
-
     body("username")
+      .optional()
       .trim()
       .notEmpty()
       .withMessage("Username cannot be empty")
-      .custom(async (username, { req, res }) => {
+      .custom(async (username, { req }) => {
         const currentUserId = req.id;
-
         const existingUser = await prisma.user.findUnique({
-          where: {
-            username: username,
-          },
-          select: {
-            id: true,
-          },
+          where: { username },
+          select: { id: true },
         });
 
-        if (existingUser && existingUser?.id !== currentUserId) {
+        if (existingUser && existingUser.id !== currentUserId) {
           throw new CustomError(
             "Invalid input",
             "User with this username already exists",
-            400,
+            400
           );
         }
       }),
 
-    body("profileUrl").trim().optional(),
+    body("firstname")
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage("Firstname cannot be empty"),
 
-    body("coverUrl").trim().optional(),
+    body("lastname")
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage("Lastname cannot be empty"),
 
-    body("bio").trim().optional(),
+    body("bio").optional(),
+    body("coverUrl").optional().trim(),
+    body("profileUrl").optional().trim(),
   ],
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -157,61 +183,109 @@ module.exports.updateOne = [
         "Input Error",
         "Some inputs are invalid. Please check and try again.",
         400,
-        errors.array(),
+        errors.array()
       );
     }
 
     const userId = req.id;
-    const { firstname, lastname, username, profileUrl, bio, coverUrl } =
+    const { firstname, lastname, username, bio, coverUrl, profileUrl } =
       req.body;
+    const profileImageFile = req.files?.profileImage?.[0];
+    const coverImageFile = req.files?.coverImage?.[0];
 
-    // Get old user data to check for old profileUrl
-    const oldUser = await prisma.user.findUnique({
+    // Get user
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { profileUrl: true, coverUrl: true },
     });
 
-    const isValidUrl = (value) => {
-      try {
-        const url = new URL(value);
-        return url.protocol === "https:" || url.protocol === "http:";
-      } catch {
-        return false;
+    let newProfileUrl = profileUrl;
+    let newCoverUrl = coverUrl;
+
+    // Handle profile image FILE upload (if file provided)
+    if (profileImageFile) {
+      if (!profileImageFile.mimetype.startsWith("image/")) {
+        throw new CustomError("Input Error", "Only images allowed", 400);
       }
-    };
+      if (profileImageFile.size > 5 * 1024 * 1024) {
+        throw new CustomError(
+          "Input Error",
+          "Profile image too large (max 5MB)",
+          400
+        );
+      }
 
-    // Delete old profile image if new one is provided
-    if (profileUrl && oldUser?.profileUrl && !isValidUrl(oldUser.profileUrl)) {
-      try {
-        await supabase.storage.from("chat-files").remove([oldUser.profileUrl]);
+      const fileData = await fileService.uploadPublicFile(profileImageFile);
+      newProfileUrl = fileData.path;
 
-        console.log(`Deleted old profile image: ${oldUser.profileUrl}`);
-      } catch (error) {
-        console.error("Error deleting old profile image:", error);
-        // Don't fail the update if delete fails - just log it
+      if (user?.profileUrl) {
+        try {
+          await fileService.deletePublicFile(user.profileUrl);
+          console.log(`Deleted old profile image: ${user.profileUrl}`);
+        } catch (error) {
+          console.error("Error deleting old profile image:", error);
+        }
       }
     }
 
-    if (coverUrl && oldUser?.coverUrl && !isValidUrl(oldUser.coverUrl)) {
+    // Handle cover image FILE upload (if file provided)
+    if (coverImageFile) {
+      if (!coverImageFile.mimetype.startsWith("image/")) {
+        throw new CustomError("Input Error", "Only images allowed", 400);
+      }
+      if (coverImageFile.size > 5 * 1024 * 1024) {
+        throw new CustomError(
+          "Input Error",
+          "Cover image too large (max 5MB)",
+          400
+        );
+      }
+
+      const fileData = await fileService.uploadPublicFile(coverImageFile);
+      newCoverUrl = fileData.path;
+
+      if (user?.coverUrl) {
+        try {
+          await fileService.deletePublicFile(user.coverUrl);
+          console.log(`Deleted old cover image: ${user.coverUrl}`);
+        } catch (error) {
+          console.error("Error deleting old cover image:", error);
+        }
+      }
+    }
+
+    // If coverUrl provided as string and changed, delete old
+    if (coverUrl && coverUrl !== user?.coverUrl && user?.coverUrl) {
       try {
-        await supabase.storage.from("chat-files").remove([oldUser.coverUrl]);
-        console.log(`Deleted old cover image: ${oldUser.coverUrl}`);
+        await fileService.deletePublicFile(user.coverUrl);
+        console.log(`Deleted old cover image: ${user.coverUrl}`);
       } catch (error) {
         console.error("Error deleting old cover image:", error);
       }
     }
 
-    // check username uniqueness in validator
-    const user = await prisma.user.update({
+    // If profileUrl provided as string and changed, delete old
+    if (profileUrl && profileUrl !== user?.profileUrl && user?.profileUrl) {
+      try {
+        await fileService.deletePublicFile(user.profileUrl);
+        console.log(`Deleted old profile image: ${user.profileUrl}`);
+      } catch (error) {
+        console.error("Error deleting old profile image:", error);
+      }
+    }
+
+    // Build update data
+    const updateData = {};
+    if (firstname !== undefined) updateData.firstname = firstname;
+    if (lastname !== undefined) updateData.lastname = lastname;
+    if (username !== undefined) updateData.username = username;
+    if (bio !== undefined) updateData.bio = bio;
+    if (newProfileUrl !== undefined) updateData.profileUrl = newProfileUrl;
+    if (newCoverUrl !== undefined) updateData.coverUrl = newCoverUrl;
+
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: {
-        ...(firstname !== undefined && { firstname }),
-        ...(lastname !== lastname && { lastname }),
-        ...(username !== username && { username }),
-        ...(profileUrl !== profileUrl && { profileUrl }),
-        ...(coverUrl !== coverUrl && { coverUrl }),
-        ...(bio !== bio && { bio }),
-      },
+      data: updateData,
       select: {
         id: true,
         username: true,
@@ -223,7 +297,9 @@ module.exports.updateOne = [
       },
     });
 
-    res.status(200).send(user);
+    const userWithImageUrl = attachUserImageUrls([updatedUser])[0];
+
+    res.status(200).send(userWithImageUrl);
   }),
 ];
 
@@ -239,10 +315,10 @@ module.exports.changePassword = [
       .notEmpty()
       .withMessage("Newpassword cannot be empty")
       .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,}$/,
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,}$/
       )
       .withMessage(
-        "Password must be atleast 8 characters with letters, numbers, and a symbol",
+        "Password must be atleast 8 characters with letters, numbers, and a symbol"
       ),
 
     body("confirmNewPassword")
@@ -256,7 +332,7 @@ module.exports.changePassword = [
           throw new CustomError(
             "Invalid input",
             "The confirmed password and password does not match.",
-            400,
+            400
           );
         }
       }),
@@ -269,7 +345,7 @@ module.exports.changePassword = [
         "Input Error",
         "Some inputs are invalid. Please check and try again.",
         400,
-        errors.array(),
+        errors.array()
       );
     }
 
@@ -293,12 +369,16 @@ module.exports.changePassword = [
       where: { id: req.id },
       data: {
         password: hashedPassword,
+        refreshToken: null,
       },
       select: {
         id: true,
       },
     });
 
-    res.status(201).send(updatedUser);
+    res.status(201).send({
+      message: "Password changed successfully. Please log in again.",
+      ...updatedUser,
+    });
   }),
 ];

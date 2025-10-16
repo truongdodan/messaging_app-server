@@ -4,6 +4,7 @@ const {
   validateDeleteMessage,
 } = require("../../validators/messageValidator");
 const socketEvents = require("../../constants/socketEvents");
+const socketEmitter = require("../../utils/socketEmitter");
 
 module.exports = async (io, socket) => {
   // Send message in a chat
@@ -21,7 +22,7 @@ module.exports = async (io, socket) => {
 
       // return new message
       if (callback) {
-        callback({ success: true, data: newConversation });
+        callback({ success: true, data: newMessage });
       }
     } catch (error) {
       if (callback) {
