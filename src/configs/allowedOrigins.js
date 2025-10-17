@@ -1,6 +1,4 @@
 // Use environment variable for production, fallback to localhost for dev
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["http://localhost:5173", "http://localhost:3000"];
+const allowedOrigins = ["http://localhost:5173", "http://localhost:3000", 'https://merry-heliotrope-1ee7ba.netlify.app/'];
 
 module.exports = allowedOrigins;
