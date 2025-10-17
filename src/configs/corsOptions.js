@@ -3,7 +3,7 @@ const CustomError = require("../errors/CustomError");
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       // remove !origin on deployment
       callback(null, true);
     } else {
