@@ -4,6 +4,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
+    "build": "npx prisma generate",
     "dev": "nodemon src/index.js",
     "dev:all": "node ./../dev.js",
     "test": "jest",

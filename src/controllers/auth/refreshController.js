@@ -4,6 +4,7 @@ const { body, query } = require("express-validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const CustomError = require("../../errors/CustomError");
+const fileService = require("../../services/fileService");
 
 module.exports = asyncHandler(async (req, res) => {
   const cookies = req.cookies;
