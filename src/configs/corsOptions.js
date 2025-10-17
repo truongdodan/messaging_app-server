@@ -15,7 +15,7 @@ const corsOptions = {
       );
     }
   },
-  //   credentials: true,
+  credentials: true,
   optionSuccessStatus: 200,
 };
 
