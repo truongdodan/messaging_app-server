@@ -6,8 +6,6 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       // remove !origin on deployment
       callback(null, true);
-
-      console.log(allowedOrigins);
     } else {
       callback(
         new CustomError(

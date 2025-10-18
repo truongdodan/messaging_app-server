@@ -1,8 +1,8 @@
+require("dotenv").config();
 // Use environment variable for production, fallback to localhost for dev
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "https://merry-heliotrope-1ee7ba.netlify.app",
-];
+const allowedOrigins =
+  process.env.NODE_ENV === "production"
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : ["http://localhost:5173", "http://localhost:3000"];
 
 module.exports = allowedOrigins;

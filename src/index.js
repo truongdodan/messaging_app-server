@@ -8,10 +8,9 @@ const cookieParser = require("cookie-parser");
 const http = require("http");
 const setupSocket = require("./socket");
 const socketEmitter = require("./utils/socketEmitter");
-const { prisma } = require("./lib/prisma");
 
-const server = http.createServer(app);
 require("dotenv").config();
+const server = http.createServer(app);
 const PATH = process.env.PORT || 3000;
 
 // Setup middlewares
