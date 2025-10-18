@@ -3,11 +3,12 @@ const socketAuth = require("./middleware/socketAuth");
 const messageHandler = require("./handlers/messageHandler");
 const conversationHandler = require("./handlers/conversationHandler");
 const userHandler = require("./handlers/userHandler");
+const allowedOrigins = require("../configs/allowedOrigins");
 
 function setupSocket(server) {
   const io = socketIo(server, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
       credentials: true,
     },

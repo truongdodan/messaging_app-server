@@ -45,24 +45,10 @@ app.use(errorHandler);
 const io = setupSocket(server);
 socketEmitter.setIO(io);
 
-const lol = async () => {
-  const conver = await prisma.conversation.findFirst({
-    where: {
-      type: "GLOBAL",
-    },
-    include: {
-      participants: true,
-      messages: true,
-    },
-  });
-
-  console.log(conver);
-};
-
-// lol();
-
 server.listen(PATH, () => {
-  console.log(`Server is running on http://localhost:${PATH}`);
+  console.log(
+    `Server is running on https://messaging-app-server-8fox.onrender.com:${PATH}`
+  );
 });
 
 module.exports = app;
